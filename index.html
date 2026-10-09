@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ちがう色さがし｜60秒で目の解像度チェック</title>
+<meta name="description" content="1マスだけ色がちがうタイルを60秒で探し続けるゲーム。到達レベルで「神の目」までランクが決まるよ。">
+<meta name="theme-color" content="#d8fbec">
+<meta property="og:type" content="website">
+<meta property="og:title" content="ちがう色さがし">
+<meta property="og:description" content="1マスだけ色がちがうよ。60秒で、どこまで見抜ける？">
+<meta property="og:image" content="https://USERNAME.github.io/iro-sagashi/og.png">
+<meta property="og:url" content="https://USERNAME.github.io/iro-sagashi/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap">
+<style>/* 共通: ステッカー帳スタイル。太いインクの輪郭とずらした影。各アプリが :root で色を上書きする */
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+:root{
+  --ink:#1d1630;
+  --paper:#ffffff;
+  --muted:#5d5470;
+  --line:#1d1630;
+  --f-display:"Dela Gothic One","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-body:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;
+  --r:18px;
+  color-scheme:light;
+}
+html,body{min-height:100%}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:var(--f-body);font-size:16px;line-height:1.7;
+  padding-inline:16px;padding-block:20px 48px;
+  -webkit-tap-highlight-color:transparent;
+}
+.wrap{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;line-height:1.25;text-wrap:balance;margin:0}
+p{margin:0}
+.hero{display:flex;flex-direction:column;gap:8px;padding-top:8px}
+.hero h1{font-size:clamp(34px,10vw,52px);letter-spacing:.01em}
+.hero .tag{display:inline-flex;align-self:flex-start;font-weight:800;font-size:13px;letter-spacing:.08em;
+  background:var(--ink);color:var(--paper);padding:3px 12px;border-radius:999px}
+.hero .lead{color:var(--muted);font-weight:700}
+.sheet{background:var(--paper);border:2.5px solid var(--line);border-radius:var(--r);
+  box-shadow:5px 5px 0 var(--line);padding:20px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.sheet h2{font-size:22px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.stack{display:flex;flex-direction:column;gap:10px}
+label.f{display:flex;flex-direction:column;gap:4px;font-weight:800;font-size:14px}
+label.f small{font-weight:500;color:var(--muted)}
+input[type=text],input[type=date],input[type=time],textarea,select{
+  font:inherit;font-size:16px;color:var(--ink);background:var(--paper);
+  border:2px solid var(--line);border-radius:12px;padding:10px 12px;width:100%;min-width:0}
+textarea{resize:vertical;min-height:80px}
+input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{
+  outline:3px solid var(--accent2);outline-offset:2px}
+.btn{font:inherit;font-weight:800;font-size:16px;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  background:var(--accent);color:var(--on-accent,var(--ink));
+  border:2.5px solid var(--line);border-radius:999px;padding:11px 22px;
+  box-shadow:3px 3px 0 var(--line);text-decoration:none;transition:transform .08s,box-shadow .08s}
+.btn:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--line)}
+.btn.sub{background:var(--paper);color:var(--ink)}
+.btn.dark{background:var(--ink);color:var(--paper)}
+.btn.wide{width:100%}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:inherit;font-weight:700;font-size:15px;cursor:pointer;background:var(--paper);color:var(--ink);
+  border:2px solid var(--line);border-radius:999px;padding:7px 14px;line-height:1.4}
+.chip[aria-pressed=true]{background:var(--accent);box-shadow:2px 2px 0 var(--line)}
+.code{font-family:ui-monospace,Menlo,monospace;font-size:13px;word-break:break-all;
+  background:var(--soft);border:2px dashed var(--line);border-radius:12px;padding:10px 12px}
+.note{font-size:13px;color:var(--muted)}
+.result-img{display:flex;flex-direction:column;gap:10px;align-items:stretch}
+.result-img img{width:100%;border:2.5px solid var(--line);border-radius:14px;display:block}
+.fallback{font-size:13px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
+  background:var(--ink);color:var(--paper);font-weight:800;padding:10px 18px;border-radius:999px;
+  z-index:50;font-size:14px;max-width:calc(100% - 32px);text-align:center}
+.tabs{display:flex;gap:8px;flex-wrap:wrap}
+.footer{font-size:12px;color:var(--muted);text-align:center}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* レイアウト: 正方形の盤面を中心に、上にタイマーとレベル。ミントの紙にインクの枠 */
+:root{--bg:#d8fbec;--accent:#3fe0a6;--accent2:#ff5e7e;--soft:#effff8}
+.hud{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.hud div{background:var(--paper);border:2.5px solid var(--line);border-radius:14px;padding:8px 10px;text-align:center;box-shadow:3px 3px 0 var(--line)}
+.hud small{display:block;font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.06em}
+.hud b{font-family:var(--f-display);font-weight:400;font-size:28px;font-variant-numeric:tabular-nums;line-height:1.2}
+.hud .low b{color:var(--accent2)}
+.board{width:100%;max-width:520px;aspect-ratio:1;margin:0 auto;display:grid;gap:6px;padding:8px;
+  background:var(--paper);border:2.5px solid var(--line);border-radius:var(--r);box-shadow:5px 5px 0 var(--line)}
+.board button{border:0;border-radius:10px;cursor:pointer;padding:0;min-width:0;min-height:0}
+.board.shake{animation:sh .3s}
+@keyframes sh{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.start{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;grid-column:1/-1;grid-row:1/-1;padding:20px}
+.start h2{font-size:28px}
+.tiers{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;font-size:14px}
+.tiers li{background:var(--soft);border:2px solid var(--line);border-radius:12px;padding:6px 10px;display:flex;justify-content:space-between;gap:8px;font-weight:800}
+.tiers li span{color:var(--muted);font-variant-numeric:tabular-nums}
+
+body{margin:0;padding-top:calc(20px + env(safe-area-inset-top,0px))}
+.board button{touch-action:manipulation}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="hero">
+    <span class="tag">60秒チャレンジ</span>
+    <h1>ちがう色さがし</h1>
+    <p class="lead">1マスだけ色がちがうよ。どんどん細かくなる盤面で、どこまで見抜ける？</p>
+  </header>
+
+  <div class="hud" aria-live="polite">
+    <div id="hud-t"><small>のこり</small><b id="t">60.0</b></div>
+    <div><small>レベル</small><b id="lv">1</b></div>
+    <div><small>ベスト</small><b id="best">0</b></div>
+  </div>
+
+  <div class="board" id="board"></div>
+
+  <section class="sheet" id="result" hidden></section>
+
+  <section class="sheet">
+    <h2>目のランク</h2>
+    <ul class="tiers" id="tiers"></ul>
+    <p class="note">まちがえてタップすると3秒へるよ。画面の明るさで結果が変わることもあります。</p>
+  </section>
+</div>
+
+<script>/* 共通ヘルパー: コード化、コピー、Xシェア、結果画像 */
+const K = (() => {
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  function enc(o) {
+    const b = new TextEncoder().encode(JSON.stringify(o));
+    let bin = ""; b.forEach(x => bin += String.fromCharCode(x));
+    return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+  function dec(t, kind) {
+    try {
+      const runs = String(t || "").match(/[A-Za-z0-9_-]{10,}/g);
+      if (!runs) return null;
+      runs.sort((a, b) => b.length - a.length);
+      for (const c of runs) {
+        try {
+          let s = c.replace(/-/g, "+").replace(/_/g, "/");
+          while (s.length % 4) s += "=";
+          const bin = atob(s);
+          const o = JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, ch => ch.charCodeAt(0))));
+          if (o && (!kind || o.k === kind)) return o;
+        } catch (e) { /* 次の候補へ */ }
+      }
+    } catch (e) {}
+    return null;
+  }
+  function fromHash(kind) {
+    try { const h = location.hash.slice(1); return h.length > 10 ? dec(h, kind) : null; } catch (e) { return null; }
+  }
+
+  let toastTimer;
+  function toast(msg) {
+    let t = $(".toast");
+    if (!t) { t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); document.body.appendChild(t); }
+    t.textContent = msg; t.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.hidden = true, 2200);
+  }
+
+  function copy(text, fallbackEl) {
+    const done = () => toast("コピーしたよ！");
+    const fail = () => {
+      if (fallbackEl) {
+        fallbackEl.hidden = false; fallbackEl.value = text;
+        fallbackEl.focus(); fallbackEl.select();
+        toast("選択した文字をコピーしてね");
+      } else toast("コピーできなかったよ");
+    };
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fail);
+      else fail();
+    } catch (e) { fail(); }
+  }
+
+  const tweet = text => "https://twitter.com/intent/tweet?text=" + encodeURIComponent(text);
+
+  function hash(str) { let h = 2166136261; for (const ch of String(str)) { h ^= ch.codePointAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function rng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  const pick = (arr, r) => arr[Math.floor((r ? r() : Math.random()) * arr.length)];
+
+  /* ---------- canvas ---------- */
+  async function fonts() {
+    try {
+      await Promise.race([
+        Promise.all([
+          document.fonts.load('40px "Dela Gothic One"', "あア"),
+          document.fonts.load('800 20px "M PLUS Rounded 1c"', "あア"),
+          document.fonts.load('500 20px "M PLUS Rounded 1c"', "あア"),
+        ]),
+        new Promise(r => setTimeout(r, 2500)),
+      ]);
+    } catch (e) {}
+  }
+  const FD = '"Dela Gothic One","Hiragino Sans",sans-serif';
+  const FB = '"M PLUS Rounded 1c","Hiragino Maru Gothic ProN",sans-serif';
+  function canvas(w, h) { const c = document.createElement("canvas"); c.width = w; c.height = h; return { c, x: c.getContext("2d") }; }
+  function rr(x, X, Y, W, H, R) { x.beginPath(); x.moveTo(X + R, Y); x.arcTo(X + W, Y, X + W, Y + H, R); x.arcTo(X + W, Y + H, X, Y + H, R); x.arcTo(X, Y + H, X, Y, R); x.arcTo(X, Y, X + W, Y, R); x.closePath(); }
+  function sticker(x, X, Y, W, H, R, fill, ink, off = 10) {
+    rr(x, X + off, Y + off, W, H, R); x.fillStyle = ink; x.fill();
+    rr(x, X, Y, W, H, R); x.fillStyle = fill; x.fill(); x.lineWidth = 6; x.strokeStyle = ink; x.stroke();
+  }
+  function wrap(x, text, maxW) {
+    const out = []; let line = "";
+    for (const ch of String(text)) {
+      if (ch === "\n") { out.push(line); line = ""; continue; }
+      if (x.measureText(line + ch).width > maxW && line) { out.push(line); line = ch; } else line += ch;
+    }
+    if (line) out.push(line);
+    return out;
+  }
+  function fit(x, text, maxW, size, family, weight = "") {
+    let s = size;
+    do { x.font = `${weight} ${s}px ${family}`; s -= 2; } while (x.measureText(text).width > maxW && s > 12);
+  }
+  function dots(x, W, H, color, gap = 34, r = 3) {
+    x.fillStyle = color;
+    for (let yy = 0; yy < H; yy += gap) for (let xx = (yy / gap) % 2 ? gap / 2 : 0; xx < W; xx += gap) { x.beginPath(); x.arc(xx, yy, r, 0, 7); x.fill(); }
+  }
+
+
+  const pageURL = () => location.origin + location.pathname;
+  function showImage(c, box, filename, shareText) {
+    const url = c.toDataURL("image/png");
+    const full = shareText ? shareText + "\n" + pageURL() : "";
+    box.innerHTML = `<img alt="結果画像" src="${url}">
+      <p class="note">画像を長押し（パソコンは右クリック）でも保存できるよ</p>
+      <div class="row">
+        <button class="btn" type="button" data-save>画像を保存・シェア</button>
+        ${full ? `<a class="btn dark" target="_blank" rel="noopener" href="${tweet(full)}">Xでシェア</a>` : ""}
+      </div>`;
+    box.querySelector("[data-save]").addEventListener("click", () => {
+      c.toBlob(async blob => {
+        if (!blob) return;
+        const file = new File([blob], filename, { type: "image/png" });
+        try {
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file], text: full });
+            return;
+          }
+        } catch (e) { if (e && e.name === "AbortError") return; }
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob); a.download = filename;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+        toast("保存したよ！");
+      }, "image/png");
+    });
+  }
+
+  function store(key, val) {
+    try { if (val === undefined) return JSON.parse(localStorage.getItem(key) || "null"); localStorage.setItem(key, JSON.stringify(val)); } catch (e) { return null; }
+  }
+
+  return { $, $$, esc, enc, dec, fromHash, toast, copy, tweet, hash, rng, pick, fonts, FD, FB, canvas, rr, sticker, wrap, fit, dots, showImage, store };
+})();
+</script>
+<script>
+const TIERS = [[30, "神の目"], [24, "絶対色感"], [18, "鷹の目"], [12, "いい目"], [6, "ふつうの目"], [0, "ねむい目"]];
+const tierOf = s => TIERS.find(t => s >= t[0])[1];
+K.$("#tiers").innerHTML = [...TIERS].reverse().map(([s, n]) => `<li>${n}<span>Lv.${s + 1}〜</span></li>`).join("");
+const board = K.$("#board");
+let best = +(K.store("iro-best") || 0); K.$("#best").textContent = best;
+let lv = 1, left = 60, odd = -1, timer = null, last = 0, playing = false;
+
+function startScreen(msg) {
+  board.style.gridTemplateColumns = "1fr"; board.style.gridTemplateRows = "1fr";
+  board.innerHTML = `<div class="start">
+    ${msg || `<h2>準備はいい？</h2><p class="note">いちばん色がちがう1マスをタップ</p>`}
+    <button class="btn" type="button" id="go">${msg ? "もう一回" : "スタート"}</button></div>`;
+  K.$("#go").onclick = start;
+}
+function size(l) { return Math.min(2 + Math.floor(l / 3), 9); }
+function level() {
+  const n = size(lv), h = Math.floor(Math.random() * 360), s = 55 + Math.random() * 25, l = 45 + Math.random() * 18;
+  const d = Math.max(2.2, 20 - lv * 0.62);
+  odd = Math.floor(Math.random() * n * n);
+  board.style.gridTemplateColumns = `repeat(${n},1fr)`; board.style.gridTemplateRows = `repeat(${n},1fr)`;
+  const base = `hsl(${h} ${s}% ${l}%)`, diff = `hsl(${h} ${s}% ${l + (l > 55 ? -d : d)}%)`;
+  board.innerHTML = Array.from({ length: n * n }, (_, i) => `<button type="button" data-i="${i}" aria-label="マス${i + 1}" style="background:${i === odd ? diff : base}"></button>`).join("");
+  K.$("#lv").textContent = lv;
+}
+function tick(now) {
+  if (!playing) return;
+  left = Math.max(0, left - (now - last) / 1000); last = now;
+  K.$("#t").textContent = left.toFixed(1);
+  K.$("#hud-t").classList.toggle("low", left < 10);
+  if (left <= 0) return end();
+  timer = requestAnimationFrame(tick);
+}
+function start() {
+  lv = 1; left = 60; playing = true; K.$("#result").hidden = true;
+  level(); last = performance.now(); timer = requestAnimationFrame(tick);
+}
+board.addEventListener("click", e => {
+  const b = e.target.closest("[data-i]"); if (!b || !playing) return;
+  if (+b.dataset.i === odd) { lv++; level(); }
+  else { left = Math.max(0, left - 3); board.classList.remove("shake"); void board.offsetWidth; board.classList.add("shake"); }
+});
+async function end() {
+  playing = false; cancelAnimationFrame(timer);
+  const score = lv - 1, tier = tierOf(score), isBest = score > best;
+  if (isBest) { best = score; K.store("iro-best", best); K.$("#best").textContent = best; }
+  startScreen(`<h2>${tier}</h2><p><b>レベル${score}</b>までクリア${isBest ? "（ベスト更新！）" : ""}</p>`);
+  const r = K.$("#result"); r.hidden = false;
+  r.innerHTML = `<h2>結果カード</h2><div class="result-img" id="img"></div>`;
+  await K.fonts();
+  K.showImage(card(score, tier), K.$("#img"), "iro-sagashi.png", `ちがう色さがしでレベル${score}「${tier}」でした！あなたはどこまでいける？\n#ちがう色さがし`);
+}
+function card(score, tier) {
+  const W = 1080, H = 1080, { c, x } = K.canvas(W, H);
+  const n = 9, cell = W / n;
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) { x.fillStyle = `hsl(${150 + (i + j) * 6} 60% ${84 + ((i * j) % 3)}%)`; x.fillRect(i * cell, j * cell, cell, cell); }
+  x.fillStyle = "hsl(340 80% 72%)"; x.fillRect(6 * cell, 1 * cell, cell, cell);
+  K.sticker(x, 110, 180, 860, 720, 44, "#ffffff", "#1d1630", 16);
+  x.fillStyle = "#1d1630"; x.textAlign = "center"; x.textBaseline = "alphabetic";
+  x.font = `56px ${K.FD}`; x.fillText("ちがう色さがし", 540, 300);
+  x.fillStyle = "#5d5470"; x.font = `800 44px ${K.FB}`; x.fillText("60秒でクリアしたレベル", 540, 390);
+  x.fillStyle = "#1d1630"; x.font = `260px ${K.FD}`; x.fillText(score, 540, 640);
+  x.fillStyle = "#3fe0a6"; K.rr(x, 250, 690, 580, 130, 65); x.fill(); x.lineWidth = 6; x.strokeStyle = "#1d1630"; x.stroke();
+  x.fillStyle = "#1d1630"; K.fit(x, tier, 500, 80, K.FD); x.fillText(tier, 540, 785);
+  x.font = `800 38px ${K.FB}`; x.fillText("#ちがう色さがし", 540, 1010);
+  return c;
+}
+startScreen();
+</script>
+
+</body>
+</html>
