@@ -19,9 +19,9 @@
 3. リポジトリの **Settings → Pages** で、Source を「Deploy from a branch」、Branch を `main` / `(root)` にして Save
 4. 1〜2分後、`https://ユーザー名.github.io/iro-sagashi/` で公開される
 
-## 公開後に1か所だけ直す
+## 公開URL
 
-`index.html` の中にある `USERNAME`（2か所）を自分のGitHubユーザー名に書き換えると、XやLINEでリンクを貼ったときにプレビュー画像が表示されます。
+https://minolu-29.github.io/iro-sagashi/
 
 ## 遊び方
 
