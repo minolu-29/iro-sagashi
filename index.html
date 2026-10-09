@@ -105,6 +105,8 @@ input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-vis
 
 body{margin:0;padding-top:calc(20px + env(safe-area-inset-top,0px))}
 .board button{touch-action:manipulation}
+.mode{align-self:center;margin:0 0 -6px;background:var(--ink);color:var(--paper);font-weight:800;font-size:14px;
+  padding:4px 14px;border-radius:999px;letter-spacing:.04em}
 </style>
 </head>
 <body>
@@ -122,6 +124,7 @@ body{margin:0;padding-top:calc(20px + env(safe-area-inset-top,0px))}
     <div><small>ベスト</small><b id="best">0</b></div>
   </div>
 
+  <p class="mode" id="mode" hidden></p>
   <div class="board" id="board"></div>
 
   <section class="sheet" id="result" hidden></section>
@@ -279,6 +282,7 @@ let best = +(K.store("iro-best") || 0); K.$("#best").textContent = best;
 let lv = 1, left = 60, odd = -1, timer = null, last = 0, playing = false;
 
 function startScreen(msg) {
+  K.$("#mode").hidden = true;
   board.style.gridTemplateColumns = "1fr"; board.style.gridTemplateRows = "1fr";
   board.innerHTML = `<div class="start">
     ${msg || `<h2>準備はいい？</h2><p class="note">いちばん色がちがう1マスをタップ</p>`}
@@ -286,13 +290,62 @@ function startScreen(msg) {
   K.$("#go").onclick = start;
 }
 function size(l) { return Math.min(2 + Math.floor(l / 3), 9); }
+
+/* 出題パターン。min はそのパターンが出始めるレベル。同じパターンは2回連続で出ない */
+const MODES = [
+  { key: "light",   name: "明るさがちがう" },
+  { key: "hue",     name: "色みがちがう" },
+  { key: "sat",     name: "あざやかさがちがう" },
+  { key: "dark",    name: "暗い色の中から探せ",       min: 3 },
+  { key: "pastel",  name: "くすみカラーの中から探せ", min: 4 },
+  { key: "rainbow", name: "グラデーションの中から探せ", min: 5 },
+  { key: "noise",   name: "ノイズまじり",             min: 7 },
+];
+const SHAPES = [
+  { css: "border-radius:10px" },
+  { css: "border-radius:50%" },
+  { css: "border-radius:30% 4px" },
+  { css: "border-radius:4px;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)" },
+];
+let lastMode = "";
+const rnd = (a, b) => a + Math.random() * (b - a);
+
 function level() {
-  const n = size(lv), h = Math.floor(Math.random() * 360), s = 55 + Math.random() * 25, l = 45 + Math.random() * 18;
-  const d = Math.max(2.2, 20 - lv * 0.62);
+  const n = size(lv);
+  const pool = MODES.filter(m => lv >= (m.min || 1) && m.key !== lastMode);
+  const m = pool[Math.floor(Math.random() * pool.length)]; lastMode = m.key;
+  const shape = lv < 4 ? SHAPES[0] : SHAPES[Math.floor(Math.random() * SHAPES.length)];
+
+  let h = Math.floor(Math.random() * 360), s = rnd(55, 80), l = rnd(45, 63);
+  if (m.key === "sat") s = rnd(75, 92);
+  if (m.key === "dark") { s = rnd(35, 60); l = rnd(18, 26); }
+  if (m.key === "pastel") { s = rnd(14, 28); l = rnd(60, 74); }
+
+  // 差の大きさ（レベルが上がるほど小さくなる）
+  const dL = Math.max(2.2, 20 - lv * 0.62);
+  const dH = Math.max(4, 30 - lv * 0.9);
+  const dS = Math.max(8, 48 - lv * 1.4);
+  const sign = Math.random() < .5 ? -1 : 1;
+
   odd = Math.floor(Math.random() * n * n);
+  const cells = [];
+  for (let i = 0; i < n * n; i++) {
+    const r = Math.floor(i / n), c = i % n;
+    let th = h, ts = s, tl = l;
+    if (m.key === "rainbow") th = h + (r + c) / Math.max(1, 2 * n - 2) * 80;
+    if (m.key === "noise" && i !== odd) tl += rnd(-0.3, 0.3) * dL;
+    if (i === odd) {
+      if (m.key === "hue") th += dH * sign;
+      else if (m.key === "sat") ts -= dS;
+      else if (m.key === "dark") tl += dL * 1.1;
+      else if (m.key === "rainbow") tl += (tl > 55 ? -1 : 1) * dL * 1.2;
+      else tl += (tl > 55 ? -1 : 1) * dL;
+    }
+    cells.push(`<button type="button" data-i="${i}" aria-label="マス${i + 1}" style="${shape.css};background:hsl(${th.toFixed(1)} ${ts.toFixed(1)}% ${tl.toFixed(1)}%)"></button>`);
+  }
   board.style.gridTemplateColumns = `repeat(${n},1fr)`; board.style.gridTemplateRows = `repeat(${n},1fr)`;
-  const base = `hsl(${h} ${s}% ${l}%)`, diff = `hsl(${h} ${s}% ${l + (l > 55 ? -d : d)}%)`;
-  board.innerHTML = Array.from({ length: n * n }, (_, i) => `<button type="button" data-i="${i}" aria-label="マス${i + 1}" style="background:${i === odd ? diff : base}"></button>`).join("");
+  board.innerHTML = cells.join("");
+  const md = K.$("#mode"); md.textContent = m.name; md.hidden = false;
   K.$("#lv").textContent = lv;
 }
 function tick(now) {
@@ -304,7 +357,7 @@ function tick(now) {
   timer = requestAnimationFrame(tick);
 }
 function start() {
-  lv = 1; left = 60; playing = true; K.$("#result").hidden = true;
+  lv = 1; left = 60; playing = true; lastMode = ""; K.$("#result").hidden = true;
   level(); last = performance.now(); timer = requestAnimationFrame(tick);
 }
 board.addEventListener("click", e => {
